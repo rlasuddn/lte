@@ -1,12 +1,14 @@
 import {
   Body,
   Controller,
+  Delete,
   HttpException,
   HttpStatus,
+  Param,
   Post,
 } from '@nestjs/common';
 import { AuthsService } from './auths.service';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { UserDto } from 'src/users/dto/user.dto';
 
 import * as bcrypt from 'bcrypt';
 import { ResponseEntity } from 'src/common/response/response.entity';
@@ -16,12 +18,26 @@ export class AuthsController {
   constructor(private readonly authsService: AuthsService) {}
 
   @Post('signin')
-  async signin() {
-    return true;
+  async signin(@Body() dto: UserDto) {
+    const existUser = await this.authsService.findUser(dto.email);
+
+    const comparePassword = await bcrypt.compare(
+      dto.password,
+      existUser.password,
+    );
+
+    if (!comparePassword)
+      throw new HttpException(
+        '로그인 정보를 확인해 주세요.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    //토큰 발급
+    return await this.authsService.signin(existUser.email, existUser.nickname);
   }
 
   @Post('signup')
-  async signup(@Body() dto: CreateUserDto) {
+  async signup(@Body() dto: UserDto) {
     //TODO: 데이터 베이스에서 이메일에 해당하는 유저 조회
     const existUser = await this.authsService.findUser(dto.email);
 
@@ -32,9 +48,14 @@ export class AuthsController {
 
     const bcryptPassword = await bcrypt.hash(dto.password, salt);
 
-    //TODO: 이메일, 비밀번호, 솔트값 저장
-    await this.authsService.createUser(dto.email, bcryptPassword, salt);
+    //TODO: 이메일, 비밀번호
+    await this.authsService.createUser(dto.email, bcryptPassword, dto.nickname);
 
     return ResponseEntity.Ok(HttpStatus.OK, '회원가입에 성공하였습니다.');
+  }
+
+  @Delete()
+  async deleteUser(@Param() email: string) {
+    await this.authsService.deleteUser(email);
   }
 }
