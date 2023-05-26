@@ -7,18 +7,18 @@ import {
   Param,
   Post,
 } from '@nestjs/common';
-import { AuthsService } from './auths.service';
-import { UserDto } from 'src/users/dto/user.dto';
+import { AuthsService } from '../application/auths.service';
 
 import * as bcrypt from 'bcrypt';
 import { ResponseEntity } from 'src/common/response/response.entity';
+import { AuthDto } from './dtos/auth.dto';
 
 @Controller('auths')
 export class AuthsController {
   constructor(private readonly authsService: AuthsService) {}
 
   @Post('signin')
-  async signin(@Body() dto: UserDto) {
+  async signin(@Body() dto: AuthDto) {
     const existUser = await this.authsService.findUser(dto.email);
 
     const comparePassword = await bcrypt.compare(
@@ -37,7 +37,7 @@ export class AuthsController {
   }
 
   @Post('signup')
-  async signup(@Body() dto: UserDto) {
+  async signup(@Body() dto: AuthDto) {
     //TODO: 데이터 베이스에서 이메일에 해당하는 유저 조회
     const existUser = await this.authsService.findUser(dto.email);
 
