@@ -1,7 +1,7 @@
 export class AuthUser {
   constructor(
-    private email: string,
-    private nickcname: string,
-    private password: string,
+    readonly email: string,
+    readonly nickname: string,
+    readonly password: string,
   ) {}
 }
